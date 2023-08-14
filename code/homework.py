@@ -2,47 +2,48 @@ import json
 
 CONTACTS_FILE = "contacts.json"
 
-class ContactBook:
-    def __init__(self):
-        self.contacts = {}
-        self.load_contacts()
-
-    def save_contacts(self):
-        with open(CONTACTS_FILE, "w") as f:
-            json.dump(self.contacts, f)
-
-    def load_contacts(self):
+def error_handler(func):
+    def wrapper(*args, **kwargs):
         try:
-            with open(CONTACTS_FILE, "r") as f:
-                self.contacts = json.load(f)
+            return func(*args, **kwargs)
         except FileNotFoundError:
-            pass
+            return {}
+    return wrapper
 
-    def add_contact(self, name, phone):
-        self.contacts[name] = phone
-        self.save_contacts()
+@error_handler
+def load_contacts():
+    with open(CONTACTS_FILE, "r") as f:
+        return json.load(f)
 
-    def find_contact(self, name):
-        return self.contacts.get(name, "Введіть username.")
+def save_contacts(contacts):
+    with open(CONTACTS_FILE, "w") as f:
+        json.dump(contacts, f)
 
-    def update_contact(self, name, phone):
-        if name in self.contacts:
-            self.contacts[name] = phone
-            self.save_contacts()
-        else:
-            return "Введіть username."
+def add_contact(contacts, name, phone):
+    contacts[name] = phone
+    save_contacts(contacts)
 
-    def show_contacts(self):
-        if self.contacts:
-            output = "Ваша контактна книга:\n"
-            for name, phone in self.contacts.items():
-                output += f"{name} - {phone}\n"
-            return output
-        else:
-            return "Ваша контактна книга пуста."
+def find_contact(contacts, name):
+    return contacts.get(name, "Введіть username.")
+
+def update_contact(contacts, name, phone):
+    if name in contacts:
+        contacts[name] = phone
+        save_contacts(contacts)
+    else:
+        return "Введіть username."
+
+def show_contacts(contacts):
+    if contacts:
+        output = "Ваша контактна книга:\n"
+        for name, phone in contacts.items():
+            output += f"{name} - {phone}\n"
+        return output
+    else:
+        return "Ваша контактна книга пуста."
 
 def main():
-    contact_book = ContactBook()
+    contacts = load_contacts()
 
     while True:
         command = input("Введіть команду: ").lower()
@@ -53,20 +54,20 @@ def main():
             print("Чим я можу допомогти?")
         elif command_name == "add":
             name, phone = words[1], words[2]
-            contact_book.add_contact(name, phone)
+            add_contact(contacts, name, phone)
             print(f"Контакт {name} з номером {phone} додано.")
         elif command_name == "phone":
             name = words[1]
-            print(contact_book.find_contact(name))
+            print(find_contact(contacts, name))
         elif command_name == "change":
             name, phone = words[1], words[2]
-            result = contact_book.update_contact(name, phone)
+            result = update_contact(contacts, name, phone)
             if result:
                 print(result)
             else:
                 print(f"Контакт {name} змінено на {phone}.")
         elif command_name == "show":
-            print(contact_book.show_contacts())
+            print(show_contacts(contacts))
         elif command_name in ("good bye", "close", "exit"):
             print("Бувайте здорові!")
             break

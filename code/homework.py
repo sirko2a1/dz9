@@ -1,78 +1,69 @@
 def input_error(func):
-    def wrapper(*args, **kwargs):
+    def inner(*args):
         try:
-            return func(*args, **kwargs)
+            return func(*args)
         except KeyError:
-            return "Enter user name"
+            return 'Введіть username'
         except ValueError:
-            return "Give me name and phone please"
+            return 'Дайте мені імя та телефон'
         except IndexError:
-            return "Enter name"
-    return wrapper
+            return 'Введіть команду'
+    return inner
 
 @input_error
-def add_contact(contacts, name, phone):
+def hello_handler(*args):
+    return 'Чим я можу допомогти?'
+
+@input_error
+def add_handler(*args):
+    if len(args) != 2:
+        return 'Дайте мені імя та телефон'
+    name, phone = args
     contacts[name] = phone
-    return f"Contact {name} with phone {phone} added."
+    return f'Контакт {name} з телефоном {phone} додано!'
 
 @input_error
-def find_contact(contacts, name):
+def change_handler(*args):
+    if len(args) != 2:
+        return 'Дайте мені імя та телефон'
+    name, phone = args
+    if name not in contacts:
+        return 'Контакт не знайдено('
+    contacts[name] = phone
+    return f'Контакт {name} змінено!'
+
+@input_error
+def phone_handler(*args):
+    if len(args) != 1:
+        return 'Введіть username'
+    name = args[0]
     return contacts[name]
 
 @input_error
-def update_contact(contacts, name, phone):
-    if name in contacts:
-        contacts[name] = phone
-        return f"Contact {name} changed to {phone}."
-    else:
-        return "Enter name"
-
-def show_contacts(contacts):
-    if contacts:
-        output = "Your contact book:\n"
-        for name, phone in contacts.items():
-            output += f"{name} - {phone}\n"
-        return output
-    else:
-        return "Your contact book is empty."
+def show_all_handler(*args):
+    result = ''
+    for name, phone in contacts.items():
+        result += f'{name}: {phone}\n'
+    return result
 
 def main():
-    contacts = {}
-
     while True:
-        command = input("Enter a command: ").lower()
-        words = command.split()
-        command_name = words[0]
-
-        if command_name == "hello":
-            print("How can I help you?")
-        elif command_name == "add":
-            try:
-                name, phone = words[1], words[2]
-                response = add_contact(contacts, name, phone)
-                print(response)
-            except IndexError:
-                print("Give me name and phone please")
-        elif command_name == "phone":
-            try:
-                name = words[1]
-                print(find_contact(contacts, name))
-            except IndexError:
-                print("Enter name")
-        elif command_name == "change":
-            try:
-                name, phone = words[1], words[2]
-                response = update_contact(contacts, name, phone)
-                print(response)
-            except IndexError:
-                print("Give me name and phone please")
-        elif command_name == "show":
-            print(show_contacts(contacts))
-        elif command_name in ("good bye", "close", "exit"):
-            print("Good bye!")
+        command = input('Введіть команду: ').lower()
+        if command == 'hello':
+            print(hello_handler())
+        elif command == 'add':
+            print(add_handler(*input('Дайте мені імя та телефон: ').split()))
+        elif command == 'change':
+            print(change_handler(*input('Дайте мені імя та телефон: ').split()))
+        elif command == 'phone':
+            print(phone_handler(*input('Введіть імя: ').split()))
+        elif command == 'show all':
+            print(show_all_handler())
+        elif command in ('good bye', 'close', 'exit'):
+            print('Дай вам боже здоровячка, заходіть ще!')
             break
         else:
-            print("Something went wrong. Please try again.")
+            print('Щось не так!')
 
-if __name__ == "__main__":
-    main()
+contacts = {}
+main()

@@ -1,88 +1,78 @@
-import csv
+def input_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "Enter user name"
+        except ValueError:
+            return "Give me name and phone please"
+        except IndexError:
+            return "Enter name"
+    return wrapper
 
-def check_file():
-    try:
-        with open('data.txt') as f:
-            DATA = list(csv.reader(f))
-    except FileNotFoundError:
-        with open('data.txt', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['name', 'age', 'phone'])
-            DATA = []
-    return DATA
+@input_error
+def add_contact(contacts, name, phone):
+    contacts[name] = phone
+    return f"Contact {name} with phone {phone} added."
 
-def add():
-    DATA = check_file()
-    name = input('Enter name: ')
-    age = input('Enter age: ')
-    phone = input('Enter phone: ')
-    DATA.append([name, age, phone])
-    with open('data.txt', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(DATA)
-    print('Данні додані!')
+@input_error
+def find_contact(contacts, name):
+    return contacts[name]
 
-def change():
-    DATA = check_file()
-    index = int(input('Введіть індекс: '))
-    name = input('Введіть нове імя: ')
-    age = input('Введіть новий вік: ')
-    phone = input('Введіть номер: ')
-    DATA[index] = [name, age, phone]
-    with open('data.txt', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(DATA)
-    print('Данні були змінені!')
+@input_error
+def update_contact(contacts, name, phone):
+    if name in contacts:
+        contacts[name] = phone
+        return f"Contact {name} changed to {phone}."
+    else:
+        return "Enter name"
 
-def search():
-    DATA = check_file()
-    name = input('Введіть імя: ')
-    phone = None
-    for row in DATA[1:]:
-        if row[0] == name:
-            phone = row[2]
+def show_contacts(contacts):
+    if contacts:
+        output = "Your contact book:\n"
+        for name, phone in contacts.items():
+            output += f"{name} - {phone}\n"
+        return output
+    else:
+        return "Your contact book is empty."
+
+def main():
+    contacts = {}
+
+    while True:
+        command = input("Enter a command: ").lower()
+        words = command.split()
+        command_name = words[0]
+
+        if command_name == "hello":
+            print("How can I help you?")
+        elif command_name == "add":
+            try:
+                name, phone = words[1], words[2]
+                response = add_contact(contacts, name, phone)
+                print(response)
+            except IndexError:
+                print("Give me name and phone please")
+        elif command_name == "phone":
+            try:
+                name = words[1]
+                print(find_contact(contacts, name))
+            except IndexError:
+                print("Enter name")
+        elif command_name == "change":
+            try:
+                name, phone = words[1], words[2]
+                response = update_contact(contacts, name, phone)
+                print(response)
+            except IndexError:
+                print("Give me name and phone please")
+        elif command_name == "show":
+            print(show_contacts(contacts))
+        elif command_name in ("good bye", "close", "exit"):
+            print("Good bye!")
             break
-    if phone is not None:
-        print(f'Телефонний номер {name} це {phone}')
-    else:
-        print(f'{name} хто це? в нас немає таких')
+        else:
+            print("Something went wrong. Please try again.")
 
-def show():
-    DATA = check_file()
-    for row in DATA:
-        print(', '.join(row))
-
-def delete():
-    DATA = check_file()
-    index = int(input('Введіть індекс: '))
-    DATA.pop(index)
-    with open('data.txt', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(DATA)
-    print('Данні видалені!')
-
-commands = {
-    'add': add,
-    'change': change,
-    'search': search,
-    'show': show,
-    'delete': delete,
-}
-print('Раді вас вітати в нашому боті!')
-print('Ви можете використовувати наступні команди:')
-print('add - додати нові данні')
-print('change - щоб змінити існуючі дані')
-print('search - щоб знайти номер телефона за імям')
-print('show - показати усі данні')
-print('delete - щоб видалити існуючі данні')
-print('exit - щоб вийти з програми')
-
-while True:
-    command = input('Введіть команду: ')
-    if command in commands:
-        commands[command]()
-    elif command == 'exit':
-        print('Бувайте здорові!')
-        break
-    else:
-        print('Щось не так')
+if __name__ == "__main__":
+    main()
